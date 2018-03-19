@@ -1,0 +1,94 @@
+FUNCTION z_multi_view_maintenance.
+*"----------------------------------------------------------------------
+*"*"Local interface:
+*"  IMPORTING
+*"     VALUE(EVENT) LIKE  SWETYPECOU-EVENT
+*"     VALUE(RECTYPE) LIKE  SWETYPECOU-RECTYPE
+*"     VALUE(OBJTYPE) LIKE  SWETYPECOU-OBJTYPE
+*"     VALUE(OBJKEY) LIKE  SWEINSTCOU-OBJKEY
+*"     VALUE(EXCEPTIONS_ALLOWED) LIKE  SWEFLAGS-EXC_OK DEFAULT 'X'
+*"  EXPORTING
+*"     VALUE(REC_ID) LIKE  SWELOG-RECID
+*"  TABLES
+*"      EVENT_CONTAINER STRUCTURE  SWCONT
+*"  EXCEPTIONS
+*"      INVALID_MATCH
+*"----------------------------------------------------------------------
+  INCLUDE <cntain>.
+  DATA: old_wi_id LIKE swwwihead-wi_id.
+  DATA: local_wi_header LIKE swwwihead.
+
+* search work item from receiver
+  swc_get_element event_container evt_receiver_id old_wi_id.
+  local_wi_header-wi_id = old_wi_id.
+
+* read workitem container
+  CLEAR wi_container. REFRESH wi_container.
+  CALL FUNCTION 'SWW_WI_CONTAINER_READ'
+       EXPORTING
+            wi_id                    = local_wi_header-wi_id
+       TABLES
+            wi_container             = wi_container
+       EXCEPTIONS
+            container_does_not_exist = 01.
+
+  READ TABLE wi_container WITH KEY element = 'VIEW'.
+
+  CASE wi_container-value.
+    WHEN 'V'. " Sales
+      READ TABLE wi_container WITH KEY element = 'PLANT'.
+      READ TABLE event_container WITH KEY element = 'PLANT'.
+      IF wi_container-value(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+    when 'L'.
+      READ TABLE wi_container WITH KEY element = 'STORAGELOCATION'.
+      READ TABLE event_container WITH KEY element = 'STORAGELOCATION'.
+************************
+     tables indx.
+      export wi_container-value event_container-value
+      to database indx(wf) id 'test1'.
+************************
+      IF wi_container-value+5(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+      READ TABLE event_container WITH KEY element = 'PLANT'.
+      IF wi_container-value+1(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+    WHEN 'S'. " Warehouse
+      READ TABLE wi_container WITH KEY element = 'WAREHOUSE'.
+      READ TABLE event_container WITH KEY element = 'WHSENUMBER'.
+      IF wi_container-value+9(3) <> event_container-value(3).
+        RAISE invalid_match.
+      ENDIF.
+    WHEN 'D'. " MRP
+      READ TABLE wi_container WITH KEY element = 'PLANT'.
+      READ TABLE event_container WITH KEY element = 'PLANT'.
+      IF wi_container-value(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+    WHEN 'E'. " Purchasing
+      READ TABLE wi_container WITH KEY element = 'PLANT'.
+      READ TABLE event_container WITH KEY element = 'PLANT'.
+      IF wi_container-value(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+    WHEN 'B'. " Accounting
+      READ TABLE wi_container WITH KEY element = 'PLANT'.
+      READ TABLE event_container WITH KEY element = 'VALUATIONAREA'.
+************************
+   export wi_container-value event_container-value
+   to database indx(wf) id 'test3'.
+************************
+      IF wi_container-value(4) <> event_container-value(4).
+        RAISE invalid_match.
+      ENDIF.
+    WHEN OTHERS.
+  ENDCASE.
+
+
+
+
+
+ENDFUNCTION.
