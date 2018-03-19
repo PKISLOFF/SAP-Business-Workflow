@@ -15,9 +15,17 @@ FUNCTION z_multi_view_maintenance.
 *"      INVALID_MATCH
 *"----------------------------------------------------------------------
 
-*"For creating/changing material master records in SAP R/3 (or ECC?) with transaction MM01/MM02.This master record transaction is a *"combinations of independently updatable different views depending on the business area the material master is used for (Sales, *"Accounting, MRP etc.)
-*"In SAP Business Workflow, the transaction can be called synchronously, but then it is not clear during the workflow step if any views *"have actually been created or changed. It is therefore advantageous to create the step asynchronously, but then this step needs a *"terminating event.
-*"I'm traction SWE2, terminating events are linked to receivers. A terminating event is created for every time the create/change of a *"material master view is committed to the database -BUT WHICH VIEW? The view is in the parameter of the (terminating event). The view *"created/changed can read from the workitem container, and if it doesn't match then the terminating event is cancelled by raising an *"exception in the associated function module.
+*"For creating/changing material master records in SAP R/3 (or ECC?) with transaction MM01/MM02.This master record transaction is a
+*"combinations of independently updatable different views depending on the business area the material master is used for (Sales,
+*"Accounting, MRP etc.)
+*"In SAP Business Workflow, the transaction can be called synchronously, but then it is not clear during the workflow step if any views
+*"have actually been created or changed. It is therefore advantageous to create the step asynchronously, but then this step needs a
+*"terminating event.
+*"In traction SWE2, terminating events are linked to receivers. A terminating event is created for every time the create/change of a
+*"material master view is committed to the database -BUT WHICH VIEW? The view is in the parameter of the (terminating event). The view
+*"created/changed can read from the workitem container, and if it doesn't match then the terminating event is cancelled by raising an
+*"exception in the associated function module.
+
   INCLUDE <cntain>.
   DATA: old_wi_id LIKE swwwihead-wi_id.
   DATA: local_wi_header LIKE swwwihead.
@@ -90,9 +98,4 @@ FUNCTION z_multi_view_maintenance.
       ENDIF.
     WHEN OTHERS.
   ENDCASE.
-
-
-
-
-
 ENDFUNCTION.
